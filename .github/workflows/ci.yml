@@ -1,0 +1,112 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Node ${{ matrix.node }} · 语法检查 / 依赖审计 / 冒烟测试
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [ '18', '20', '22' ]
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+
+      - name: 语法检查（node --check）
+        run: |
+          set -e
+          for f in workday.js file-editor.js calendar-routes.js duty-records.js \
+                   ecosystem.config.example.js scripts/test-dingtalk.js; do
+            node --check "$f"
+            echo "OK  $f"
+          done
+
+      - name: 依赖安全审计（高危及以上阻断构建）
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: 启动冒烟测试（登录 / 接口 / 页面 / 鉴权）
+        env:
+          PORT: 8091
+          ZB_PASSWORD: ci-test-pass
+          COOKIE_SECRET: ci-test-cookie-secret
+          DUTY_DRYRUN: '1'
+        run: |
+          set -e
+          # 用仓库自带的脱敏样例数据启动
+          cp address.sample.txt address.txt
+          cp duty_schedule.sample.txt duty_schedule.txt
+
+          node file-editor.js &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          # 等待端口就绪（最多 10 秒）
+          for i in $(seq 1 20); do
+            if curl -s -o /dev/null "http://127.0.0.1:${PORT}/zb/"; then break; fi
+            sleep 0.5
+          done
+
+          BASE="http://127.0.0.1:${PORT}/zb"
+
+          echo "— 1. 未登录访问 API 应返回 401 —"
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${BASE}/api/data?year=2026&month=12")
+          echo "   实际: $code"
+          [ "$code" = "401" ] || { echo "❌ 期望 401，实际 $code"; exit 1; }
+
+          echo "— 2. 错误密码应登录失败 —"
+          loc=$(curl -s -o /dev/null -D - -X POST "${BASE}/login" \
+                -H 'Content-Type: application/x-www-form-urlencoded' \
+                -d 'password=wrong-password' | grep -i '^location' | tr -d '\r')
+          echo "   Location: $loc"
+          echo "$loc" | grep -q 'error=1' || { echo "❌ 错误密码未被拒绝"; exit 1; }
+
+          echo "— 3. 正确密码登录 —"
+          curl -s -o /dev/null -c cookies.txt -X POST "${BASE}/login" \
+               -H 'Content-Type: application/x-www-form-urlencoded' \
+               -d "password=${ZB_PASSWORD}"
+          [ -s cookies.txt ] || { echo "❌ 未拿到会话 Cookie"; exit 1; }
+
+          echo "— 4. 日历接口返回排班数据 —"
+          body=$(curl -s -b cookies.txt "${BASE}/api/data?year=2026&month=12")
+          echo "$body" | grep -q '"days"' || { echo "❌ 日历接口缺少 days"; exit 1; }
+          echo "$body" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          assert len(d['days'])==31, '天数应为31'
+          assert len(d['contacts'])==10, '通讯录应为10人'
+          assert d['schedule'].get('2026.12.01'), '12.01 应有排班'
+          print('   天数=%d 通讯录=%d 排班=%d' % (len(d['days']), len(d['contacts']), len(d['schedule'])))
+          "
+
+          echo "— 5. 通讯录与记录接口 —"
+          curl -s -b cookies.txt "${BASE}/api/contacts" | grep -q '"statusList"' || { echo "❌ 通讯录接口异常"; exit 1; }
+          curl -s -b cookies.txt "${BASE}/api/records?from=2026.12.01&to=2026.12.31" | grep -q '"stats"' || { echo "❌ 记录接口异常"; exit 1; }
+
+          echo "— 6. 三个页面均可访问 —"
+          for p in "" "contacts" "records"; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' -b cookies.txt "${BASE}/${p}")
+            echo "   /zb/${p} -> $c"
+            [ "$c" = "200" ] || { echo "❌ 页面 /zb/${p} 返回 $c"; exit 1; }
+          done
+
+          echo "✅ 冒烟测试全部通过"

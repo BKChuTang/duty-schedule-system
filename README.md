@@ -2,6 +2,7 @@
 
 > 一套面向小团队的**值班排班管理系统**：网页可视化排班日历 + 中国法定节假日/调休自动识别 + 钉钉群机器人定时提醒 + 值班记录长期归档与统计。纯文本文件存储，**无需数据库**，一台小服务器即可跑起来。
 
+[![CI](https://github.com/BKChuTang/duty-schedule-system/actions/workflows/ci.yml/badge.svg)](https://github.com/BKChuTang/duty-schedule-system/actions/workflows/ci.yml)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
 ![Database](https://img.shields.io/badge/database-none-blue)
@@ -79,6 +80,7 @@
 - [常见问题](#常见问题)
 - [目录结构](#目录结构)
 - [关于脱敏](#关于脱敏)
+- [更新日志](#更新日志)
 - [开源协议](#开源协议)
 
 ---
@@ -544,6 +546,10 @@ PM2 配置里 `watch: ['./*.txt']` 会自动重启提醒服务；`.js` 与 `.htm
 如需使用，请把上述占位值替换为自己的真实配置，并**不要**把含真实凭据的文件提交到仓库（`.gitignore` 已做拦截）。
 
 ---
+
+## 更新日志
+
+见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 开源协议
 
