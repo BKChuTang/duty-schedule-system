@@ -41,6 +41,10 @@ const zbAuth = (req, res, next) => {
   if (authCookie === 'authenticated') {
     return next();
   }
+  // 站点图标等静态资源免登录（浏览器在登录前就会请求 favicon）
+  if (/\.(ico|svg|png)$/i.test(req.originalUrl.split('?')[0])) {
+    return next();
+  }
   // 接口请求返回 401 JSON（便于前端/脚本识别），页面请求返回登录页
   if (req.originalUrl.indexOf(BASE_PATH + '/api/') === 0) {
     return res.status(401).json({ error: '未登录或会话已过期，请刷新页面重新登录' });
@@ -56,6 +60,9 @@ const zbAuth = (req, res, next) => {
   <head>
     <meta charset="UTF-8">
     <title>登录 - 值班配置编辑器</title>
+    <link rel="icon" type="image/svg+xml" href="${BASE_PATH}/logo.svg">
+    <link rel="alternate icon" href="${BASE_PATH}/favicon.ico">
+    <meta name="theme-color" content="#3B8EF0">
     <style>
       body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f7fa; }
       .login-box { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1); width: 300px; }
@@ -127,6 +134,9 @@ app.get(`${BASE_PATH}/files`, (req, res) => {
   <head>
     <meta charset="UTF-8">
     <title>值班配置编辑器</title>
+    <link rel="icon" type="image/svg+xml" href="${BASE_PATH}/logo.svg">
+    <link rel="alternate icon" href="${BASE_PATH}/favicon.ico">
+    <meta name="theme-color" content="#3B8EF0">
     <style>
       body { font-family: Arial, sans-serif; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
       .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -224,6 +234,24 @@ app.post(`${BASE_PATH}/restart`, (req, res) => {
   } catch (error) {
     res.redirect(`${BASE_PATH}/?restartError=${encodeURIComponent(error.message)}`);
   }
+});
+
+// ==================== 站点图标（favicon / logo） ====================
+// 直接读 static/ 下的文件，免登录，供浏览器标签页与"添加到主屏幕"使用
+const ICON_ROUTES = {
+  '/favicon.ico': { file: 'favicon.ico', type: 'image/x-icon' },
+  '/logo.svg': { file: 'logo.svg', type: 'image/svg+xml' },
+  '/apple-touch-icon.png': { file: 'apple-touch-icon.png', type: 'image/png' },
+  '/logo-192.png': { file: 'logo-192.png', type: 'image/png' }
+};
+Object.keys(ICON_ROUTES).forEach(p => {
+  const cfg = ICON_ROUTES[p];
+  app.get(BASE_PATH + p, (req, res) => {
+    const full = path.join(__dirname, 'static', cfg.file);
+    if (!fs.existsSync(full)) return res.status(404).end();
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.type(cfg.type).send(fs.readFileSync(full));
+  });
 });
 
 // ==================== 值班日历编辑 ====================

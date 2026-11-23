@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="值班排班管理系统">
+  <title>值班排班管理系统</title>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5AA9FF"/>
+      <stop offset="55%" stop-color="#3B8EF0"/>
+      <stop offset="100%" stop-color="#1F6FD0"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#EAF3FF"/>
+    </linearGradient>
+    <linearGradient id="day" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7BD64A"/>
+      <stop offset="100%" stop-color="#4FA82C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 底色：圆角方块 -->
+  <rect x="0" y="0" width="64" height="64" rx="15" fill="url(#bg)"/>
+
+  <!-- 日历卡片 -->
+  <rect x="12" y="17" width="40" height="34" rx="5" fill="url(#card)"/>
+
+  <!-- 日历顶部色带 -->
+  <path d="M12 22a5 5 0 0 1 5-5h30a5 5 0 0 1 5 5v5H12z" fill="#1B62B8"/>
+
+  <!-- 装订环 -->
+  <rect x="20" y="10" width="4.5" height="10" rx="2.2" fill="#FFFFFF"/>
+  <rect x="39.5" y="10" width="4.5" height="10" rx="2.2" fill="#FFFFFF"/>
+
+  <!-- 日期格：两行三列 -->
+  <rect x="17.5" y="31" width="7.5" height="5" rx="1.6" fill="#C6DCF7"/>
+  <rect x="28.2" y="31" width="7.5" height="5" rx="1.6" fill="#C6DCF7"/>
+  <rect x="38.9" y="31" width="7.5" height="5" rx="1.6" fill="#C6DCF7"/>
+  <rect x="17.5" y="40" width="7.5" height="5" rx="1.6" fill="#C6DCF7"/>
+
+  <!-- 当日值班格：高亮 + 白色小人（在岗） -->
+  <rect x="28.2" y="40" width="7.5" height="5" rx="1.6" fill="url(#day)"/>
+  <circle cx="31.95" cy="40.9" r="1.15" fill="#FFFFFF"/>
+  <path d="M29.9 44.6c0-1.15.92-1.9 2.05-1.9s2.05.75 2.05 1.9z" fill="#FFFFFF"/>
+
+  <rect x="38.9" y="40" width="7.5" height="5" rx="1.6" fill="#C6DCF7"/>
+</svg>

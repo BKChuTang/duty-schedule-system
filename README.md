@@ -1,12 +1,23 @@
-# 值班排班管理系统（Duty Schedule System）
+<p align="center">
+  <img src="docs/logo.svg" width="104" alt="值班排班管理系统 Logo">
+</p>
+
+<h1 align="center">值班排班管理系统</h1>
+
+<p align="center">
+  <b>Duty Schedule System</b><br>
+  可视化排班日历 · 法定节假日识别 · 钉钉定时提醒 · 值班记录归档
+</p>
+
+<p align="center">
+  <a href="https://github.com/BKChuTang/duty-schedule-system/actions/workflows/ci.yml"><img src="https://github.com/BKChuTang/duty-schedule-system/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+  <img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen" alt="Node">
+  <img src="https://img.shields.io/badge/database-none-blue" alt="Database">
+  <img src="https://img.shields.io/badge/UI-%E4%B8%AD%E6%96%87-red" alt="Interface">
+</p>
 
 > 一套面向小团队的**值班排班管理系统**：网页可视化排班日历 + 中国法定节假日/调休自动识别 + 钉钉群机器人定时提醒 + 值班记录长期归档与统计。纯文本文件存储，**无需数据库**，一台小服务器即可跑起来。
-
-[![CI](https://github.com/BKChuTang/duty-schedule-system/actions/workflows/ci.yml/badge.svg)](https://github.com/BKChuTang/duty-schedule-system/actions/workflows/ci.yml)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
-![Database](https://img.shields.io/badge/database-none-blue)
-![Interface](https://img.shields.io/badge/UI-%E4%B8%AD%E6%96%87-red)
 
 **Topics**：`duty-schedule` · `duty-roster` · `calendar` · `dingtalk` · `dingtalk-bot` · `dingtalk-robot` · `express` · `reminder` · `chinese-holidays` · `lunar-calendar` · `nodejs`
 
@@ -524,7 +535,15 @@ PM2 配置里 `watch: ['./*.txt']` 会自动重启提醒服务；`.js` 与 `.htm
 ├── address.sample.txt       # 通讯录样例
 ├── duty_schedule.sample.txt # 排班表样例
 ├── duty_records.sample.csv  # 归档样例
-├── docs/screenshots/        # README 界面截图
+├── docs/
+│   ├── logo.svg             # 项目 Logo（矢量源文件）
+│   ├── logo-512.png         # 项目 Logo（512px）
+│   ├── logo-64.png          # 项目 Logo（64px）
+│   └── screenshots/         # README 界面截图
+├── static/favicon.ico       # 浏览器标签页图标（16/32/48 多尺寸）
+├── static/logo.svg          # 页面用 SVG 图标
+├── static/logo-192.png      # 主屏幕图标
+├── static/apple-touch-icon.png
 ├── ecosystem.config.example.js  # PM2 配置样例（复制为 ecosystem.config.js 使用）
 ├── .env.example             # 环境变量样例
 ├── LICENSE                  # MIT
