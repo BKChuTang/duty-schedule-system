@@ -7,7 +7,7 @@
 ![Database](https://img.shields.io/badge/database-none-blue)
 ![Interface](https://img.shields.io/badge/UI-%E4%B8%AD%E6%96%87-red)
 
-**Topics**：`duty-schedule` · `duty-roster` · `roster` · `calendar` · `dingtalk` · `dingtalk-robot` · `reminder` · `chinese-holidays` · `lunar-calendar` · `express` · `nodejs` · `pm2` · `self-hosted` · `值班` · `排班`
+**Topics**：`duty-schedule` · `duty-roster` · `calendar` · `dingtalk` · `dingtalk-bot` · `dingtalk-robot` · `express` · `reminder` · `chinese-holidays` · `lunar-calendar` · `nodejs`
 
 一套面向小团队的值班排班系统：**网页可视化排班** + **中国法定节假日识别** + **钉钉定时提醒** + **值班记录归档统计**。
 
