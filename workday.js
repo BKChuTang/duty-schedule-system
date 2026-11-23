@@ -1,3 +1,6 @@
+// ===== 加载项目根目录 .env（若已安装 dotenv；未安装则只用系统环境变量，不影响运行）=====
+try { require('dotenv').config(); } catch (e) { /* dotenv 未安装，忽略 */ }
+
 console.log("当前时区：", Intl.DateTimeFormat().resolvedOptions().timeZone);
 console.log("当前时间：", new Date().toLocaleString());
 

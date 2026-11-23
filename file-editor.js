@@ -1,3 +1,6 @@
+// ===== 加载项目根目录 .env（若已安装 dotenv；未安装则只用系统环境变量，不影响运行）=====
+try { require('dotenv').config(); } catch (e) { /* dotenv 未安装，忽略 */ }
+
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -32,6 +35,10 @@ const zbAuth = (req, res, next) => {
   const authCookie = req.signedCookies[ZB_AUTH_COOKIE];
   if (authCookie === 'authenticated') {
     return next();
+  }
+  // 接口请求返回 401 JSON（便于前端/脚本识别），页面请求返回登录页
+  if (req.originalUrl.indexOf(BASE_PATH + '/api/') === 0) {
+    return res.status(401).json({ error: '未登录或会话已过期，请刷新页面重新登录' });
   }
   // 未登录显示登录页
   let error = '';
