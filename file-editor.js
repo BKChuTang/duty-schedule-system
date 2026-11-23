@@ -447,7 +447,8 @@ app.get('/', (req, res) => {
       <p>管理每日值日排班和人员通讯录</p>
       <div class="btn-group">
         <a href="/zb/" class="btn">📝 值班编辑器</a>
-        <a href="/hermes/" class="btn btn-hermes">🔮 Hermes Web UI</a>
+        ${/* 可选功能：Hermes Web UI 反代（本项目默认未启用，见文件末尾注释段落） */''}
+        ${false ? '<a href="/hermes/" class="btn btn-hermes">🔮 Hermes Web UI</a>' : ''}
       </div>
       <div class="footer">由 Hermes Agent 提供支持 · 通过微信/QQ 发送指令操作</div>
     </div>
