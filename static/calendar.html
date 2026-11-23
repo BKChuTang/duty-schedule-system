@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>值班安排 · 日历编辑</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; background: #f2f4f7; color: #303133; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 16px; }
+  .topbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; background: #fff; padding: 14px 18px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .title { font-size: 18px; font-weight: 700; }
+  .title small { font-weight: 400; color: #909399; font-size: 12px; margin-left: 8px; }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button, .btn { border: 1px solid #dcdfe6; background: #fff; color: #303133; padding: 7px 13px; border-radius: 6px; cursor: pointer; font-size: 14px; line-height: 1.2; }
+  button:hover { border-color: #409eff; color: #409eff; }
+  button.primary { background: #409eff; border-color: #409eff; color: #fff; }
+  button.primary:hover { background: #66b1ff; border-color: #66b1ff; color: #fff; }
+  button.ghost { background: transparent; }
+  input[type=month] { border: 1px solid #dcdfe6; border-radius: 6px; padding: 6px 8px; font-size: 14px; }
+  .bar { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 12px 0 0; background: #fff; padding: 10px 18px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); font-size: 13px; color: #606266; }
+  .bar b { color: #303133; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; margin-right: 14px; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+  .cal { margin-top: 12px; background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
+  .week { display: grid; grid-template-columns: repeat(7, 1fr); background: #fafbfc; border-bottom: 1px solid #ebeef5; }
+  .week div { padding: 10px 0; text-align: center; font-size: 13px; color: #606266; font-weight: 600; }
+  .week div.we { color: #f56c6c; }
+  .grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .cell { min-height: 96px; border-right: 1px solid #f2f3f5; border-bottom: 1px solid #f2f3f5; padding: 6px 7px; position: relative; cursor: pointer; transition: background .12s; display: flex; flex-direction: column; }
+  .cell:nth-child(7n) { border-right: none; }
+  .cell:hover { background: #f5f9ff; }
+  .cell.blank { background: #fcfcfd; cursor: default; }
+  .cell.overflow { background: #f7f9fb; }
+  .cell.overflow:hover { background: #eaf0f6; }
+  .cell.overflow .dnum { color: #a8abb2; font-weight: 400; }
+  .cell.overflow .mono { font-size: 10px; color: #b1b3b8; margin: 1px 0 3px; }
+  .cell.overflow .person { font-size: 12px; opacity: .9; }
+  .cell.overflow .person.empty { background: transparent; color: #d4d7de; }
+  .cell.weekend { background: #eef2f7; }
+  .cell.weekend:hover { background: #e3eaf3; }
+  .cell.holiday { background: #ffe3e3; box-shadow: inset 4px 0 0 #f56c6c; }
+  .cell.holiday:hover { background: #ffd6d6; }
+  .cell.makeup { background: #ffedcc; box-shadow: inset 4px 0 0 #e6a23c; }
+  .cell.makeup:hover { background: #ffe4bb; }
+
+  .cell.today { box-shadow: inset 0 0 0 2px #409eff; }
+  .cell.draggable { cursor: grab; }
+  .cell.dragging { opacity: .35; }
+  .cell.dragover { background: #eaf4ff !important; box-shadow: inset 0 0 0 2px #409eff; }
+  .person { cursor: grab; }
+  .dnum { font-size: 16px; font-weight: 700; }
+  .cell.weekend .dnum, .cell.holiday .dnum { color: #f56c6c; }
+  .cell.holiday .dnum { font-weight: 800; }
+  .lunar { font-size: 11px; color: #a8abb2; margin-top: 1px; min-height: 14px; line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .badge { display: inline-block; font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-left: 4px; vertical-align: 2px; }
+  .badge.off { background: #f56c6c; color: #fff; font-weight: 700; }
+  .badge.work { background: #e6a23c; color: #fff; font-weight: 700; }
+  .fest { font-size: 10px; color: #f56c6c; min-height: 14px; line-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .person { margin-top: auto; align-self: flex-start; display: inline-block; max-width: 100%; font-size: 12px; padding: 3px 8px; border-radius: 12px; background: #ecf5ff; color: #409eff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .person.empty { background: #f4f4f5; color: #c0c4cc; }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.42); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+  .modal.show { display: flex; }
+  .modal-box { background: #fff; border-radius: 12px; width: 100%; max-width: 420px; padding: 18px; max-height: 86vh; overflow: auto; }
+  .modal-box h3 { margin: 0 0 4px; font-size: 16px; }
+  .modal-box .sub { color: #909399; font-size: 12px; margin-bottom: 14px; }
+  .plist { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .plist button { text-align: left; padding: 10px 12px; }
+  .plist button .mob { display: block; font-size: 11px; color: #a8abb2; }
+  .plist button { position: relative; }
+  .plist button .nm { display: inline-block; padding-right: 62px; }
+  .plist button .cnt { position: absolute; right: 9px; top: 9px; font-size: 11px; font-weight: normal; color: #e6a23c; background: #fdf6ec; border-radius: 3px; padding: 1px 5px; }
+  .plist button .cnt.zero { color: #c0c4cc; background: #f4f4f5; }
+  .plist button .sttag { display: inline-block; margin-left: 6px; font-size: 10px; font-weight: normal; color: #e6a23c; background: #fdf6ec; border: 1px solid #f5dab1; border-radius: 3px; padding: 0 4px; vertical-align: middle; }
+  .modal-actions { margin-top: 14px; display: flex; gap: 8px; justify-content: flex-end; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 13px; color: #606266; margin-bottom: 5px; }
+  .field select, .field input[type=number] { width: 100%; padding: 8px; border: 1px solid #dcdfe6; border-radius: 6px; font-size: 14px; }
+  .check { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #606266; margin-bottom: 8px; }
+  .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #303133; color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 90; }
+  .toast.show { opacity: .95; transform: translateX(-50%) translateY(-4px); }
+  .toast.err { background: #f56c6c; }
+  .foot { margin: 14px 0 30px; text-align: center; font-size: 12px; color: #b1b3b8; }
+  .foot a { color: #909399; }
+  @media (max-width: 720px) {
+    .cell { min-height: 82px; padding: 4px; }
+    .dnum { font-size: 14px; }
+    .person { font-size: 11px; padding: 2px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">值班安排 <small>点击日期选择人员 ｜ 拖动人员到另一天即可换班</small></div>
+    <div class="controls">
+      <button class="ghost" id="prevMonth">‹ 上月</button>
+      <input type="month" id="monthPicker">
+      <button class="ghost" id="nextMonth">下月 ›</button>
+      <button class="ghost" id="todayBtn">今天</button>
+      <button class="primary" id="fillBtn">🪄 一键排满本月</button>
+      <a class="btn" href="records" style="text-decoration:none;">📊 记录查询</a>
+      <a class="btn" href="contacts" style="text-decoration:none;">👥 人员管理</a>
+      <a class="btn" href="files" style="text-decoration:none;">原始文件编辑</a>
+      <a class="btn" href="logout" style="text-decoration:none;">退出</a>
+    </div>
+  </div>
+
+  <div class="bar">
+    <span>本月已排 <b id="stFilled">-</b> / <b id="stTotal">-</b> 天</span>
+    <span class="legend">
+      <span><i class="dot" style="background:#ffd6d6;border:1px solid #f56c6c"></i>法定节假日</span>
+      <span><i class="dot" style="background:#ffe4bb;border:1px solid #e6a23c"></i>调休上班</span>
+      <span><i class="dot" style="background:#eef2f7;border:1px solid #c9d3e0"></i>周末（非节假日）</span>
+    </span>
+    <span id="stHoliday" style="color:#909399"></span>
+  </div>
+
+  <div class="cal">
+    <div class="week">
+      <div>周一</div><div>周二</div><div>周三</div><div>周四</div><div>周五</div><div class="we">周六</div><div class="we">周日</div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="foot">数据来源：值班人员联系人 address.txt ｜ 排班 duty_schedule.txt ｜ 节假日：中国法定节假日 ｜ <a href="files">高级：直接编辑原始文件</a></div>
+</div>
+
+<!-- 选人弹窗 -->
+<div class="modal" id="pickModal">
+  <div class="modal-box">
+    <h3 id="pickTitle">选择值班人员</h3>
+    <div class="sub" id="pickSub"></div>
+    <div class="plist" id="pickList"></div>
+    <div class="modal-actions">
+      <button id="pickClear">设为轮空</button>
+      <button class="primary" id="pickCancel">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 一键排满弹窗 -->
+<div class="modal" id="fillModal">
+  <div class="modal-box">
+    <h3>一键排满本月</h3>
+    <div class="sub">按联系人顺序循环排班，起始人员默认接续上一次排班的下一位</div>
+    <div class="field">
+      <label>起始值班人员</label>
+      <select id="fillStart"></select>
+    </div>
+    <div class="check"><input type="checkbox" id="fillSkipWeekend"> 跳过周六、周日</div>
+    <div class="check"><input type="checkbox" id="fillSkipHoliday"> 跳过法定节假日（放假）</div>
+    <div class="check"><input type="checkbox" id="fillOverwrite"> 覆盖已有排班</div>
+    <div class="modal-actions">
+      <button id="fillCancel">取消</button>
+      <button class="primary" id="fillConfirm">开始排班</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const state = { year: 0, month: 0, contacts: [], schedule: {}, days: [], today: '' };
+
+const grid = document.getElementById('grid');
+const monthPicker = document.getElementById('monthPicker');
+const toastEl = document.getElementById('toast');
+let pickTarget = null;
+let dragSource = null;
+
+async function swapDuty(a, b) {
+  try {
+    const r = await api('api/swap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ a: a, b: b })
+    });
+    state.schedule = r.schedule || state.schedule;
+    render();
+    const pa = r.a || '轮空', pb = r.b || '轮空';
+    toast('已换班：' + a.slice(5) + ' ' + pa + ' ↔ ' + b.slice(5) + ' ' + pb);
+  } catch (e) {
+    toast('换班失败：' + e.message, true);
+  }
+}
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function toast(msg, isErr) {
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toastEl.className = 'toast'; }, 2200);
+}
+
+async function api(path, opts) {
+  const res = await fetch(path, opts);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+async function load(y, m) {
+  const data = await api('api/data?year=' + y + '&month=' + m);
+  state.year = data.year; state.month = data.month;
+  state.contacts = data.contacts || [];
+  state.schedule = data.schedule || {};
+  state.days = data.days || [];
+  state.prev = data.prev || [];
+  state.next = data.next || [];
+  state.today = data.today || '';
+  monthPicker.value = String(data.year) + '-' + String(data.month).padStart(2, '0');
+  render();
+}
+
+let monthCounts = {};   // 本月各人员已排天数（供选人面板复用）
+
+// 前后月过渡格子：显示真实排班，支持点选与拖拽，但不计入本月统计、不参与一键排班
+function renderOverflow(d) {
+  const cell = document.createElement('div');
+  const isWeekend = d.weekday === 6 || d.weekday === 0;
+  let cls = 'cell overflow';
+  if (isWeekend) cls += ' weekend';
+  if (d.holiday === false) cls += ' makeup';
+  else if (d.holiday === true) cls += ' holiday';
+  if (d.date === state.today) cls += ' today';
+  cell.className = cls;
+  cell.dataset.date = d.date;
+
+  const person = state.schedule[d.date] || '';
+  const badge = d.holiday === true ? '<span class="badge off">休</span>'
+              : d.holiday === false ? '<span class="badge work">班</span>' : '';
+  const personHtml = person
+    ? '<span class="person">' + esc(person) + '</span>'
+    : '<span class="person empty">—</span>';
+
+  cell.innerHTML =
+    '<div class="dnum">' + d.day + badge + '</div>' +
+    '<div class="mono">' + d.month + '月</div>' +
+    '<div class="fest">' + (d.festival ? esc(d.festival) : '') + '</div>' +
+    personHtml;
+
+  if (person) {
+    cell.classList.add('draggable');
+    cell.setAttribute('draggable', 'true');
+  }
+
+  cell.addEventListener('dragstart', e => {
+    if (!state.schedule[d.date]) { e.preventDefault(); return; }
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', d.date);
+    dragSource = d.date;
+    cell.classList.add('dragging');
+  });
+  cell.addEventListener('dragend', () => {
+    cell.classList.remove('dragging');
+    dragSource = null;
+    document.querySelectorAll('#grid .cell.dragover').forEach(x => x.classList.remove('dragover'));
+  });
+  cell.addEventListener('dragover', e => {
+    if (!dragSource || dragSource === d.date) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    cell.classList.add('dragover');
+  });
+  cell.addEventListener('dragleave', () => cell.classList.remove('dragover'));
+  cell.addEventListener('drop', async e => {
+    e.preventDefault();
+    cell.classList.remove('dragover');
+    const from = e.dataTransfer.getData('text/plain') || dragSource;
+    if (!from || from === d.date) return;
+    await swapDuty(from, d.date);
+  });
+  cell.addEventListener('click', () => openPicker(d.date, person));
+  grid.appendChild(cell);
+}
+
+function render() {
+  grid.innerHTML = '';
+  // 上月过渡日期（显示真实排班，不计入本月统计）
+  (state.prev || []).forEach(d => renderOverflow(d));
+
+  let filled = 0;
+  monthCounts = {};
+  state.days.forEach(d => {
+    const cell = document.createElement('div');
+    const isWeekend = d.weekday === 6 || d.weekday === 0;
+    let cls = 'cell';
+    if (isWeekend) cls += ' weekend';
+    if (d.holiday === false) cls += ' makeup';
+    else if (d.holiday === true) cls += ' holiday';
+    if (d.date === state.today) cls += ' today';
+    cell.className = cls;
+
+    const person = state.schedule[d.date] || '';
+    if (person) { filled++; monthCounts[person] = (monthCounts[person] || 0) + 1; }
+
+    let badge = '';
+    if (d.holiday === true) badge = '<span class="badge off">休</span>';
+    else if (d.holiday === false) badge = '<span class="badge work">班</span>';
+
+    const festival = '<div class="fest">' + (d.festival ? esc(d.festival) : '') + '</div>';   // 恒占位，保证各行高度一致
+    const personHtml = person
+      ? '<span class="person">' + esc(person) + '</span>'
+      : '<span class="person empty">未排班</span>';
+
+    cell.innerHTML =
+      '<div class="dnum">' + d.day + badge + '</div>' +
+      '<div class="lunar">' + esc(d.lunar || '') + (d.jieqi ? ' · ' + esc(d.jieqi) : '') + '</div>' +
+      festival + personHtml;
+
+    // 拖拽换班
+    cell.dataset.date = d.date;
+    if (person) {
+      cell.classList.add('draggable');
+      cell.setAttribute('draggable', 'true');
+    }
+    cell.addEventListener('dragstart', e => {
+      if (!state.schedule[d.date]) { e.preventDefault(); return; }
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', d.date);
+      dragSource = d.date;
+      cell.classList.add('dragging');
+    });
+    cell.addEventListener('dragend', () => {
+      cell.classList.remove('dragging');
+      dragSource = null;
+      document.querySelectorAll('#grid .cell.dragover').forEach(x => x.classList.remove('dragover'));
+    });
+    cell.addEventListener('dragover', e => {
+      if (!dragSource || dragSource === d.date) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      cell.classList.add('dragover');
+    });
+    cell.addEventListener('dragleave', () => cell.classList.remove('dragover'));
+    cell.addEventListener('drop', async e => {
+      e.preventDefault();
+      cell.classList.remove('dragover');
+      const from = e.dataTransfer.getData('text/plain') || dragSource;
+      if (!from || from === d.date) return;
+      await swapDuty(from, d.date);
+    });
+
+    cell.addEventListener('click', () => openPicker(d.date, person));
+    grid.appendChild(cell);
+  });
+
+  // 下月过渡日期
+  (state.next || []).forEach(d => renderOverflow(d));
+
+  document.getElementById('stFilled').textContent = filled;
+  document.getElementById('stTotal').textContent = state.days.length;
+
+  const holi = state.days.filter(d => d.holiday === true);
+  document.getElementById('stHoliday').textContent = holi.length
+    ? '本月节假日：' + holi.map(d => (d.name || '') + d.day + '日').join('、')
+    : '本月无法定节假日';
+
+  // 人员统计
+  const chips = state.contacts.filter(c => c.status !== '退出').map(c => c.name + ' ' + (monthCounts[c.name] || 0) + '天').join(' ｜ ');
+  if (chips) document.getElementById('stHoliday').textContent += '　排班：' + chips;
+}
+
+function openPicker(date, current) {
+  pickTarget = date;
+  const d = state.days.find(x => x.date === date);
+  document.getElementById('pickTitle').textContent = '选择 ' + date + ' 的值班人员';
+  const extra = [];
+  if (d && d.holiday === true) extra.push('法定节假日');
+  if (d && d.holiday === false) extra.push('调休上班');
+  if (d && d.lunar) extra.push('农历' + d.lunar);
+  document.getElementById('pickSub').textContent = extra.join(' · ') + (current ? '　当前：' + current : '');
+
+  const list = document.getElementById('pickList');
+  list.innerHTML = '';
+  state.contacts.filter(c => c.status !== '退出').forEach(c => {
+    const btn = document.createElement('button');
+    const n = monthCounts[c.name] || 0;
+    const stTag = c.status === '不参与值班' ? '<span class="sttag">不参与</span>' : '';
+    const tag = '<span class="cnt' + (n === 0 ? ' zero' : '') + '">本月已排 ' + n + ' 天</span>';
+    btn.innerHTML = '<span class="nm">' + esc(c.name) + stTag + '</span>' + tag +
+                    (c.mobile ? '<span class="mob">' + esc(c.mobile) + '</span>' : '');
+    btn.addEventListener('click', () => { setPerson(date, c.name); });
+    list.appendChild(btn);
+  });
+  document.getElementById('pickModal').classList.add('show');
+}
+
+async function setPerson(date, person) {
+  try {
+    await api('api/set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date: date, person: person })
+    });
+    if (person) state.schedule[date] = person; else delete state.schedule[date];
+    document.getElementById('pickModal').classList.remove('show');
+    render();
+    toast(person ? (date + ' 已设为 ' + person) : (date + ' 已设为轮空'));
+  } catch (e) {
+    toast('保存失败：' + e.message, true);
+  }
+}
+
+document.getElementById('pickCancel').addEventListener('click', () => {
+  document.getElementById('pickModal').classList.remove('show');
+});
+document.getElementById('pickClear').addEventListener('click', () => {
+  if (pickTarget) setPerson(pickTarget, '');
+});
+
+// 一键排满
+document.getElementById('fillBtn').addEventListener('click', () => {
+  const sel = document.getElementById('fillStart');
+  sel.innerHTML = '<option value="">自动接续（上次排班的下一位）</option>';
+  state.contacts.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c.name; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+  document.getElementById('fillModal').classList.add('show');
+});
+document.getElementById('fillCancel').addEventListener('click', () => {
+  document.getElementById('fillModal').classList.remove('show');
+});
+document.getElementById('fillConfirm').addEventListener('click', async () => {
+  const payload = {
+    year: state.year, month: state.month,
+    startPerson: document.getElementById('fillStart').value,
+    skipWeekend: document.getElementById('fillSkipWeekend').checked,
+    skipHoliday: document.getElementById('fillSkipHoliday').checked,
+    overwrite: document.getElementById('fillOverwrite').checked
+  };
+  try {
+    const r = await api('api/autofill', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    document.getElementById('fillModal').classList.remove('show');
+    await load(state.year, state.month);
+    toast('已排班 ' + r.assigned + ' 天' + (r.skipped ? '，跳过 ' + r.skipped + ' 天' : ''));
+  } catch (e) {
+    toast('排班失败：' + e.message, true);
+  }
+});
+
+// 月份导航
+function shiftMonth(delta) {
+  let y = state.year, m = state.month + delta;
+  if (m < 1) { m = 12; y--; }
+  if (m > 12) { m = 1; y++; }
+  load(y, m).catch(e => toast('加载失败：' + e.message, true));
+}
+document.getElementById('prevMonth').addEventListener('click', () => shiftMonth(-1));
+document.getElementById('nextMonth').addEventListener('click', () => shiftMonth(1));
+document.getElementById('todayBtn').addEventListener('click', () => {
+  const t = new Date();
+  load(t.getFullYear(), t.getMonth() + 1).catch(e => toast('加载失败：' + e.message, true));
+});
+monthPicker.addEventListener('change', () => {
+  const parts = monthPicker.value.split('-');
+  if (parts.length === 2) load(Number(parts[0]), Number(parts[1])).catch(e => toast('加载失败：' + e.message, true));
+});
+
+const now = new Date();
+load(now.getFullYear(), now.getMonth() + 1).catch(e => toast('加载失败：' + e.message, true));
+</script>
+</body>
+</html>

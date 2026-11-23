@@ -1,0 +1,35 @@
+{
+  "name": "duty-schedule-system",
+  "version": "1.0.0",
+  "description": "值班排班管理系统：可视化日历排班 + 中国法定节假日识别 + 钉钉定时提醒 + 值班记录归档统计",
+  "main": "workday.js",
+  "scripts": {
+    "start:reminder": "node workday.js",
+    "start:editor": "node file-editor.js",
+    "test:dingtalk": "node scripts/test-dingtalk.js",
+    "dryrun": "DUTY_DRYRUN=1 node workday.js"
+  },
+  "keywords": [
+    "duty",
+    "schedule",
+    "roster",
+    "calendar",
+    "dingtalk",
+    "reminder",
+    "chinese-holidays",
+    "值班",
+    "排班"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.13.6",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "http-proxy-middleware": "^3.0.5",
+    "lunar-javascript": "^1.7.8",
+    "node-schedule": "^2.1.1"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

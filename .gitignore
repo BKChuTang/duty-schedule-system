@@ -1,0 +1,33 @@
+# ===== 依赖与运行时 =====
+node_modules/
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# ===== 真实数据与隐私文件（切勿提交）=====
+# 通讯录里有真实姓名和手机号
+address.txt
+address.txt.bak.*
+# 排班表
+duty_schedule.txt
+duty_schedule_副本.txt
+# 值班变更归档
+duty_records.csv
+# 节假日缓存（运行时自动生成）
+holidays-cache.json
+
+# ===== 凭据 =====
+.env
+.env.local
+ecosystem.config.js
+!ecosystem.config.example.js
+
+# ===== 系统与编辑器 =====
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+*.bak
+*.bak.*

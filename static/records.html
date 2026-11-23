@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>值班记录 · 查询统计</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; background: #f2f4f7; color: #303133; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 16px; }
+  .topbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; background: #fff; padding: 14px 18px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .title { font-size: 18px; font-weight: 700; }
+  .title small { font-weight: 400; color: #909399; font-size: 12px; margin-left: 8px; }
+  .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button, .btn { border: 1px solid #dcdfe6; background: #fff; color: #303133; padding: 7px 13px; border-radius: 6px; cursor: pointer; font-size: 14px; text-decoration: none; line-height: 1.2; }
+  button:hover, .btn:hover { border-color: #409eff; color: #409eff; }
+  button.primary { background: #409eff; border-color: #409eff; color: #fff; }
+  button.primary:hover { background: #66b1ff; border-color: #66b1ff; color: #fff; }
+  .panel { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); padding: 16px 18px; margin-top: 12px; }
+  .filter { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; color: #909399; }
+  .field input, .field select { border: 1px solid #dcdfe6; border-radius: 6px; padding: 7px 9px; font-size: 14px; min-width: 130px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 0; font-size: 13px; color: #606266; }
+  .chip { background: #f4f6f8; border-radius: 20px; padding: 5px 13px; }
+  .chip b { color: #303133; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; margin-top: 12px; }
+  @media (max-width: 820px) { .grid2 { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #f2f3f5; }
+  th { background: #fafbfc; color: #606266; font-weight: 600; position: sticky; top: 0; }
+  tr:hover td { background: #f9fbfd; }
+  .scroll { max-height: 480px; overflow: auto; border: 1px solid #f2f3f5; border-radius: 8px; }
+  .bar { display: inline-block; height: 8px; background: #409eff; border-radius: 4px; vertical-align: middle; margin-right: 6px; }
+  .tag { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: #ecf5ff; color: #409eff; }
+  .tag.import { background: #f4f4f5; color: #909399; }
+  .tag.swap { background: #fdf6ec; color: #e6a23c; }
+  .tag.autofill { background: #f0f9eb; color: #67c23a; }
+  .tag.clear { background: #fef0f0; color: #f56c6c; }
+  tr.idle td { color: #b1b3b8; }
+  tr.idle:hover td { background: #fbfbfc; }
+  .empty { text-align: center; color: #b1b3b8; padding: 26px 0; font-size: 13px; }
+  .hint { font-size: 12px; color: #a8abb2; margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">值班记录查询 <small>所有排班变更均已归档，可长期回溯统计</small></div>
+    <div class="controls">
+      <a class="btn" href="./">← 返回日历</a>
+      <a class="btn" href="files">原始文件</a>
+      <a class="btn" href="logout">退出</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="filter">
+      <div class="field"><label>开始日期</label><input type="date" id="from"></div>
+      <div class="field"><label>结束日期</label><input type="date" id="to"></div>
+      <div class="field"><label>人员</label><select id="person"><option value="">全部人员</option></select></div>
+      <button class="primary" id="queryBtn">查询</button>
+      <button id="thisMonthBtn">本月</button>
+      <button id="lastMonthBtn">上月</button>
+      <button id="allBtn">全部历史</button>
+      <a class="btn" id="exportBtn" href="#">⬇ 导出 CSV</a>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel" style="margin-top:0">
+      <div style="font-weight:600;margin-bottom:10px">人员值班天数</div>
+      <div class="scroll" style="max-height:400px">
+        <table>
+          <thead><tr><th>人员</th><th style="width:46%">占比</th><th style="text-align:right">天数</th></tr></thead>
+          <tbody id="statBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:0">
+      <div style="font-weight:600;margin-bottom:10px">变更明细（按日期倒序）</div>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>值班日期</th><th>星期</th><th>人员</th><th>操作</th><th>记录时间</th></tr></thead>
+          <tbody id="recBody"></tbody>
+        </table>
+      </div>
+      <div class="hint" id="hint"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function toInputDate(d) {
+  const p = n => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+function toDutyDate(s) { return s ? s.replace(/-/g, '.') : ''; }
+function weekdayOf(dutyDate) {
+  const parts = dutyDate.split('.');
+  const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  return ['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()];
+}
+const ACTION_LABEL = { import: '基线导入', set: '手动设置', clear: '设为轮空', swap: '换班', autofill: '一键排班' };
+
+async function load() {
+  const from = document.getElementById('from').value;
+  const to = document.getElementById('to').value;
+  const person = document.getElementById('person').value;
+  const qs = new URLSearchParams();
+  if (from) qs.set('from', toDutyDate(from));
+  if (to) qs.set('to', toDutyDate(to));
+  if (person) qs.set('person', person);
+
+  const res = await fetch('api/records?' + qs.toString());
+  const data = await res.json();
+
+  document.getElementById('exportBtn').href = 'api/records.csv?' + qs.toString();
+  document.getElementById('chips').innerHTML =
+    '<span class="chip">记录数 <b>' + data.stats.totalRecords + '</b> 条</span>' +
+    '<span class="chip">涉及日期 <b>' + data.stats.dates + '</b> 天</span>' +
+    '<span class="chip">有值班 <b>' + data.stats.assignedDays + '</b> 天</span>' +
+    '<span class="chip">排班人员 <b>' + (data.stats.people.length - (data.stats.idleCount || 0)) + '</b> 人</span>' +
+    '<span class="chip">未值班 <b>' + (data.stats.idleCount || 0) + '</b> 人</span>';
+
+  const totalAssigned = data.stats.assignedDays || 1;
+  const sb = document.getElementById('statBody');
+  if (!data.stats.people.length) {
+    sb.innerHTML = '<tr><td colspan="3" class="empty">暂无数据</td></tr>';
+  } else {
+    sb.innerHTML = data.stats.people.map(p => {
+      if (p.days === 0) {
+        return '<tr class="idle"><td>' + esc(p.name) + '</td>' +
+               '<td style="color:#c0c4cc">未排班</td>' +
+               '<td style="text-align:right;color:#c0c4cc">0 天</td></tr>';
+      }
+      const pct = Math.round(p.days / totalAssigned * 100);
+      return '<tr><td>' + esc(p.name) + '</td>' +
+             '<td><span class="bar" style="width:' + pct + '%"></span>' + pct + '%</td>' +
+             '<td style="text-align:right">' + p.days + ' 天</td></tr>';
+    }).join('');
+  }
+
+  const rb = document.getElementById('recBody');
+  if (!data.records.length) {
+    rb.innerHTML = '<tr><td colspan="5" class="empty">没有符合条件的记录</td></tr>';
+  } else {
+    rb.innerHTML = data.records.map(r =>
+      '<tr><td>' + esc(r.date) + '</td><td>' + weekdayOf(r.date) + '</td>' +
+      '<td>' + (r.person ? esc(r.person) : '<span style="color:#c0c4cc">轮空</span>') + '</td>' +
+      '<td><span class="tag ' + esc(r.action) + '">' + (ACTION_LABEL[r.action] || esc(r.action)) + '</span></td>' +
+      '<td style="color:#909399">' + esc(r.recorded_at) + '</td></tr>'
+    ).join('');
+  }
+  document.getElementById('hint').textContent = data.truncated
+    ? '（明细超过 3000 条，仅显示前 3000 条；完整数据请导出 CSV）'
+    : '共 ' + data.records.length + ' 条明细';
+}
+
+async function loadContacts() {
+  try {
+    const now = new Date();
+    const res = await fetch('api/data?year=' + now.getFullYear() + '&month=' + (now.getMonth() + 1));
+    const data = await res.json();
+    const sel = document.getElementById('person');
+    (data.contacts || []).forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.name; o.textContent = c.name;
+      sel.appendChild(o);
+    });
+  } catch (e) { /* 忽略 */ }
+}
+
+document.getElementById('queryBtn').addEventListener('click', load);
+document.getElementById('thisMonthBtn').addEventListener('click', () => {
+  const n = new Date();
+  document.getElementById('from').value = toInputDate(new Date(n.getFullYear(), n.getMonth(), 1));
+  document.getElementById('to').value = toInputDate(new Date(n.getFullYear(), n.getMonth() + 1, 0));
+  load();
+});
+document.getElementById('lastMonthBtn').addEventListener('click', () => {
+  const n = new Date();
+  document.getElementById('from').value = toInputDate(new Date(n.getFullYear(), n.getMonth() - 1, 1));
+  document.getElementById('to').value = toInputDate(new Date(n.getFullYear(), n.getMonth(), 0));
+  load();
+});
+document.getElementById('allBtn').addEventListener('click', () => {
+  document.getElementById('from').value = '';
+  document.getElementById('to').value = '';
+  document.getElementById('person').value = '';
+  load();
+});
+
+// 默认查本月
+(function init() {
+  const n = new Date();
+  document.getElementById('from').value = toInputDate(new Date(n.getFullYear(), n.getMonth(), 1));
+  document.getElementById('to').value = toInputDate(new Date(n.getFullYear(), n.getMonth() + 1, 0));
+  loadContacts().then(load);
+})();
+</script>
+</body>
+</html>
