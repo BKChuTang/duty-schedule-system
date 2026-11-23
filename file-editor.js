@@ -62,6 +62,7 @@ const zbAuth = (req, res, next) => {
     <title>登录 - 值班配置编辑器</title>
     <link rel="icon" type="image/svg+xml" href="${BASE_PATH}/logo.svg">
     <link rel="alternate icon" href="${BASE_PATH}/favicon.ico">
+    <link rel="apple-touch-icon" href="${BASE_PATH}/apple-touch-icon.png">
     <meta name="theme-color" content="#3B8EF0">
     <style>
       body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f5f7fa; }
@@ -136,6 +137,7 @@ app.get(`${BASE_PATH}/files`, (req, res) => {
     <title>值班配置编辑器</title>
     <link rel="icon" type="image/svg+xml" href="${BASE_PATH}/logo.svg">
     <link rel="alternate icon" href="${BASE_PATH}/favicon.ico">
+    <link rel="apple-touch-icon" href="${BASE_PATH}/apple-touch-icon.png">
     <meta name="theme-color" content="#3B8EF0">
     <style>
       body { font-family: Arial, sans-serif; max-width: 1000px; margin: 20px auto; padding: 0 20px; }
