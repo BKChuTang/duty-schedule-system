@@ -328,9 +328,11 @@ TZ=Asia/Shanghai
 | `BASE_PATH` | `/zb` | `file-editor.js` | 访问路径前缀，即 `http://IP:8080/zb/` |
 | `ZB_PASSWORD` | `change-me` | `file-editor.js` | 日历/人员/记录页面的登录密码，**必改** |
 | `COOKIE_SECRET` | `change-this-cookie-secret` | `file-editor.js` | 登录 Cookie 签名密钥，**必改** |
-| `HERMES_PASSWORD` | `change-me-too` | `file-editor.js` | 可选：Hermes 反代页面密码，不用可忽略 |
-| `HERMES_TARGET` | `http://127.0.0.1:9119` | `file-editor.js` | 可选：Hermes 反代目标地址 |
-| `HERMES_PATH` | `/hermes` | `file-editor.js` | 可选：Hermes 反代路径前缀 |
+
+> **关于 `HERMES_*` 三项**：这是原作者部署环境专用的可选功能（把 Hermes Web UI 反代到 `/hermes`），
+> 与值班系统核心功能无关，**开源版本的代码与配置中均已注释**。如需启用，请取消
+> `file-editor.js` 中对应段落注释、`npm i http-proxy http-proxy-middleware`，
+> 再设置 `HERMES_PASSWORD` / `HERMES_TARGET` / `HERMES_PATH`。
 
 ### 三种生效方式（优先级从高到低）
 
@@ -510,7 +512,7 @@ PM2 配置里 `watch: ['./*.txt']` 会自动重启提醒服务；`.js` 与 `.htm
 ```
 .
 ├── workday.js               # 定时提醒服务（钉钉推送 + 节假日判断）
-├── file-editor.js           # Web 服务：登录、页面路由、静态资源、可选 Hermes 反代
+├── file-editor.js           # Web 服务：登录、页面路由、静态资源（含已注释的可选 Hermes 反代）
 ├── calendar-routes.js       # 日历 API：数据、设置、换班、一键排班、通讯录
 ├── duty-records.js          # 归档模块：追加记录、查询、统计、导出
 ├── static/

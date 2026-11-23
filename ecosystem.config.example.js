@@ -53,8 +53,9 @@ module.exports = {
         PORT: 8080,
         // ⚠️ 下面三项是登录凭据，示例值仅供演示，务必改成你自己的
         ZB_PASSWORD: 'change-me',              // 编辑器登录密码
-        HERMES_PASSWORD: 'change-me-too',      // Hermes 反代页面密码（不用可忽略）
         COOKIE_SECRET: 'change-this-cookie-secret' // Cookie 签名密钥，改成随机长串
+        // （可选功能，本仓库默认已注释）原项目私有的 Hermes 反代页面密码
+        // HERMES_PASSWORD: 'change-me-too',
       },
       max_memory_restart: '200M',
       log_date_format: 'YYYY-MM-DD HH:mm:ss',

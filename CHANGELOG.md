@@ -61,6 +61,7 @@
 
 - 无数据库依赖，数据以纯文本文件存储（`address.txt`、`duty_schedule.txt`、`duty_records.csv`）
 - 仓库内所有人员姓名、手机号、钉钉 Webhook、密码、域名为虚构示例值，详见 README「关于脱敏」章节
+- 原项目私有的 `HERMES_*`（Hermes Web UI 反代）相关配置与代码在开源版本中已**注释关闭**，核心功能不依赖该模块
 
 ---
 
