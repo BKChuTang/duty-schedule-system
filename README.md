@@ -1,5 +1,14 @@
 # 值班排班管理系统（Duty Schedule System）
 
+> 一套面向小团队的**值班排班管理系统**：网页可视化排班日历 + 中国法定节假日/调休自动识别 + 钉钉群机器人定时提醒 + 值班记录长期归档与统计。纯文本文件存储，**无需数据库**，一台小服务器即可跑起来。
+
+![License](https://img.shields.io/badge/license-MIT-green)
+![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+![Database](https://img.shields.io/badge/database-none-blue)
+![Interface](https://img.shields.io/badge/UI-%E4%B8%AD%E6%96%87-red)
+
+**Topics**：`duty-schedule` · `duty-roster` · `roster` · `calendar` · `dingtalk` · `dingtalk-robot` · `reminder` · `chinese-holidays` · `lunar-calendar` · `express` · `nodejs` · `pm2` · `self-hosted` · `值班` · `排班`
+
 一套面向小团队的值班排班系统：**网页可视化排班** + **中国法定节假日识别** + **钉钉定时提醒** + **值班记录归档统计**。
 
 不需要数据库，所有数据都是纯文本文件，可直接用编辑器查看/修改，也方便备份与版本管理。
@@ -19,8 +28,46 @@
 
 ---
 
+## 界面预览
+
+> 以下截图使用仓库内置的**脱敏样例数据**（人员为张三/李四……，手机号为 1380000000x），可直接对照样例文件查看效果。
+
+### 排班日历
+
+![排班日历](docs/screenshots/calendar.png)
+
+顶部为中文月份标题（点击可选择月份）、本月已排天数、节假日图例；格子内显示日期、农历、节日与值班人员，前后月份的过渡日期也会显示真实排班。
+普通周末浅蓝灰、法定节假日粉红+`休`、调休上班琥珀+`班`，三级区分一目了然。
+
+### 点选人员（显示每人本月已排天数）
+
+![选人面板](docs/screenshots/calendar-picker.png)
+
+点任意日期弹出人员列表，每人带「本月已排 N 天」，避免分配不均；未排过的人显示灰色 `0 天`。
+
+### 法定节假日与调休识别
+
+![春节排班](docs/screenshots/calendar-holiday.png)
+
+自动拉取公共节假日数据并本地缓存，识别春节等连续假期（`休`）与调休补班（`班`），顶部汇总本月全部节假日。
+
+### 人员管理（三种状态）
+
+![人员管理](docs/screenshots/contacts.png)
+
+行内修改姓名/手机号、切换「在岗 / 不参与值班 / 退出」、▲▼ 调整轮排顺序，保存自动备份。
+
+### 值班记录查询与统计
+
+![记录查询](docs/screenshots/records.png)
+
+按日期区间与人员筛选，展示每人值班天数占比与逐条变更明细，支持一键导出 CSV。
+
+---
+
 ## 目录
 
+- [界面预览](#界面预览)
 - [功能特性](#功能特性)
 - [快速开始](#快速开始)
 - [数据文件格式](#数据文件格式)
@@ -376,6 +423,7 @@ PM2 配置里 `watch: ['./*.txt']` 会自动重启提醒服务；`.js` 与 `.htm
 ├── address.sample.txt       # 通讯录样例
 ├── duty_schedule.sample.txt # 排班表样例
 ├── duty_records.sample.csv  # 归档样例
+├── docs/screenshots/        # README 界面截图
 ├── ecosystem.config.example.js  # PM2 配置样例（复制为 ecosystem.config.js 使用）
 ├── .env.example             # 环境变量样例
 ├── LICENSE                  # MIT
