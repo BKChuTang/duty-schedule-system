@@ -133,7 +133,7 @@
 ### 安装
 
 ```bash
-git clone https://github.com/<your-name>/duty-schedule-system.git
+git clone https://github.com/BKChuTang/duty-schedule-system.git
 cd duty-schedule-system
 npm install
 ```
@@ -152,11 +152,23 @@ cp duty_schedule.sample.txt duty_schedule.txt
 
 ### 配置
 
+**只需要改一个文件：项目根目录下的 `.env`**（从同目录的 `.env.example` 复制而来）。
+
 ```bash
-cp .env.example .env    # 填写钉钉 Webhook、登录密码等
+cp .env.example .env        # ← 生成 /你的项目路径/.env
+vi .env                     # 至少填下面三项
 ```
 
-或用环境变量直接启动（见[配置说明](#配置说明)）。
+打开后必须改这 3 行：
+
+```ini
+DINGTALK_WEBHOOK_URL=https://oapi.dingtalk.com/robot/send?access_token=你的机器人token
+ZB_PASSWORD=你的登录密码
+COOKIE_SECRET=随便一长串随机字符
+```
+
+> 用 PM2 托管时，在 `ecosystem.config.js`（由 `ecosystem.config.example.js` 复制）的 `env` 段填同样的变量也可以。
+> 变量全表、优先级与 PM2 写法见[配置说明](#配置说明)。
 
 ### 启动
 
@@ -261,23 +273,108 @@ recorded_at,date,person,action,note
 
 ## 配置说明
 
-所有配置都支持**环境变量**覆盖，无需改代码：
+**不需要改任何 `.js` 代码**。配置只有两个位置，按你是否用 PM2 选一个：
 
-| 变量 | 默认值 | 说明 |
+| # | 要修改的文件 | 完整路径 | 什么时候用 |
+|---|---|---|---|
+| 1 | **`.env`** | `<项目目录>/.env`（由 `<项目目录>/.env.example` 复制） | 直接用 `node file-editor.js` / `node workday.js` 启动，**推荐** |
+| 2 | `ecosystem.config.js` | `<项目目录>/ecosystem.config.js`（由 `ecosystem.config.example.js` 复制） | 用 PM2 托管时，在 `env` 段写同样的变量 |
+
+> `<项目目录>` 就是你 `git clone` 下来的目录，例如 `/opt/duty-schedule-system`。
+
+### 第 1 步：复制模板文件
+
+```bash
+cd /opt/duty-schedule-system                  # 换成你的项目目录
+cp .env.example .env                          # ← 这个就是要改的配置文件
+cp ecosystem.config.example.js ecosystem.config.js   # 仅用 PM2 时需要
+```
+
+`.env` 与 `ecosystem.config.js` 都已在 `.gitignore` 中，不会被误提交。
+
+### 第 2 步：修改 `.env`（必改 3 项）
+
+| 变量 | 改成什么 | 不改的后果 |
 |---|---|---|
-| `DINGTALK_WEBHOOK_URL` | 示例占位 | 钉钉群机器人 Webhook，**必须替换** |
-| `DAILY_CRON` | `0 9 * * *` | 每日提醒时间（cron 表达式） |
-| `DUTY_SCHEDULE_FILE` | `./duty_schedule.txt` | 排班表路径 |
-| `ADDRESS_FILE` | `./address.txt` | 通讯录路径 |
-| `PORT` | `8080` | Web 编辑器端口 |
-| `BASE_PATH` | `/zb` | 访问路径前缀 |
-| `ZB_PASSWORD` | `change-me` | 编辑器登录密码，**必须替换** |
-| `HERMES_PASSWORD` | `change-me-too` | Hermes 反代页面密码（可选功能） |
-| `COOKIE_SECRET` | `change-this-cookie-secret` | 登录 Cookie 签名密钥，**建议改成随机长串** |
-| `HERMES_TARGET` | `http://127.0.0.1:9119` | Hermes 反代目标（可选） |
-| `DUTY_DRYRUN` | 未设置 | 设为 `1` 时提醒只打印不发送 |
+| `DINGTALK_WEBHOOK_URL` | 你的钉钉群机器人 Webhook | 提醒一条都发不出去 |
+| `ZB_PASSWORD` | 你的登录密码 | 任何知道默认密码的人都能改排班 |
+| `COOKIE_SECRET` | 一串随机长字符 | 登录 Cookie 可被伪造 |
 
-**获取钉钉 Webhook**：钉钉群 → 群设置 → 智能群助手 → 添加机器人 → 自定义 → 安全设置（建议「自定义关键词」填 `值班`）→ 复制 Webhook 地址。
+```ini
+# ===== 必改 =====
+DINGTALK_WEBHOOK_URL=https://oapi.dingtalk.com/robot/send?access_token=你的机器人token
+ZB_PASSWORD=你的登录密码
+COOKIE_SECRET=fd8s7a9f8sd7fa9s8df7a9s8df
+
+# ===== 可选 =====
+DAILY_CRON=0 9 * * *
+PORT=8080
+BASE_PATH=/zb
+TZ=Asia/Shanghai
+```
+
+### 第 3 步：完整变量表
+
+| 变量 | 默认值 | 作用文件 | 说明 |
+|---|---|---|---|
+| `DINGTALK_WEBHOOK_URL` | 示例占位 | `workday.js` | 钉钉群机器人 Webhook，**必改** |
+| `DAILY_CRON` | `0 9 * * *` | `workday.js` | 每日提醒时间（cron 表达式） |
+| `DUTY_SCHEDULE_FILE` | `./duty_schedule.txt` | `workday.js` | 排班表路径（相对项目根目录） |
+| `ADDRESS_FILE` | `./address.txt` | `workday.js` | 通讯录路径（相对项目根目录） |
+| `DUTY_DRYRUN` | 未设置 | `workday.js` | 设为 `1` 时提醒只打印不发送，用于验证文案 |
+| `PORT` | `8080` | `file-editor.js` | Web 编辑器监听端口 |
+| `BASE_PATH` | `/zb` | `file-editor.js` | 访问路径前缀，即 `http://IP:8080/zb/` |
+| `ZB_PASSWORD` | `change-me` | `file-editor.js` | 日历/人员/记录页面的登录密码，**必改** |
+| `COOKIE_SECRET` | `change-this-cookie-secret` | `file-editor.js` | 登录 Cookie 签名密钥，**必改** |
+| `HERMES_PASSWORD` | `change-me-too` | `file-editor.js` | 可选：Hermes 反代页面密码，不用可忽略 |
+| `HERMES_TARGET` | `http://127.0.0.1:9119` | `file-editor.js` | 可选：Hermes 反代目标地址 |
+| `HERMES_PATH` | `/hermes` | `file-editor.js` | 可选：Hermes 反代路径前缀 |
+
+### 三种生效方式（优先级从高到低）
+
+1. **系统/命令行环境变量**（最高）：
+   ```bash
+   DINGTALK_WEBHOOK_URL='https://...' ZB_PASSWORD='你的密码' node file-editor.js
+   ```
+2. **项目根目录 `.env` 文件**（推荐，`npm install` 已包含 dotenv）：
+   ```bash
+   npm install     # 会装 dotenv
+   node file-editor.js    # 自动读取根目录 .env
+   ```
+   不想装 dotenv 时，Node 20+ 也可显式指定：`node --env-file=.env file-editor.js`
+3. **代码内默认值**（最低，仅够本地试跑）：`change-me` 之类，**生产环境务必覆盖**。
+
+### 用 PM2 启动时怎么配
+
+改 `ecosystem.config.js` 里 `duty-reminder` 与 `duty-file-editor` 两个 app 的 `env` 段：
+
+```js
+env: {
+  NODE_ENV: 'production',
+  TZ: 'Asia/Shanghai',
+  PORT: 8080,
+  DINGTALK_WEBHOOK_URL: 'https://oapi.dingtalk.com/robot/send?access_token=你的机器人token',
+  ZB_PASSWORD: '你的登录密码',
+  COOKIE_SECRET: '随便一长串随机字符'
+}
+```
+
+改完执行：
+
+```bash
+pm2 restart ecosystem.config.js --update-env
+pm2 save
+```
+
+### 获取钉钉 Webhook
+
+钉钉群 → 群设置 → 智能群助手 → 添加机器人 → 自定义 → 安全设置（建议勾「自定义关键词」并填 `值班`）→ 复制 Webhook 地址，形如：
+
+```
+https://oapi.dingtalk.com/robot/send?access_token=abcdef1234567890
+```
+
+可先用 `node scripts/test-dingtalk.js` 验证连通性。
 
 ---
 
